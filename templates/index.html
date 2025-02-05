@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justice AI - Legal Document Analyzer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo-container">
+                <i class="fas fa-balance-scale logo"></i>
+                <div class="brand">Justice<span>AI</span></div>
+            </div>
+            <div class="tagline">
+                Menganalisis Dokumen Hukum dengan Kecerdasan Buatan
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="upload-container">
+            <h2>Unggah Dokumen Hukum</h2>
+            <p>Pilih file PDF untuk dianalisis</p>
+            
+            <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                <p>Klik atau seret file PDF ke sini</p>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+            </div>
+            
+            <button id="analyzeBtn" class="btn" disabled>
+                Analisis Dokumen
+            </button>
+        </div>
+
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Sedang menganalisis dokumen...</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="results-container" id="results">
+            <div class="result-section">
+                <h3 class="result-title">Ringkasan Dokumen</h3>
+                <div id="summaryResult" class="result-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Script tetap sama seperti sebelumnya
+        const fileInput = document.getElementById('fileInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.querySelector('.loading');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+
+        fileInput.addEventListener('change', function() {
+            const file = fileInput.files[0];
+            if (file && file.name.endsWith('.pdf')) {
+                analyzeBtn.disabled = false;
+                errorMessage.style.display = 'none';
+            } else {
+                analyzeBtn.disabled = true;
+                errorMessage.textContent = 'Mohon pilih file PDF.';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        analyzeBtn.addEventListener('click', async function() {
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            errorMessage.style.display = 'none';
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+
+                    document.getElementById('summaryResult').innerHTML = 
+                        `<p>${data.summary}</p>`;
+
+                    results.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Terjadi kesalahan saat menganalisis dokumen.');
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });      
+    </script>
+</body>
+</html>
